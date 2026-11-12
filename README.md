@@ -57,3 +57,11 @@ To restore, select the `.hvacbackup` file under Restore, enter its password, and
 - Encryption is optional and requires HTTPS (GitHub Pages) or localhost and browser IndexedDB support. The app lock protects against casual access to the open web app, not against malware or someone with control of your unlocked device.
 - **Important limitations:** browser/device caches, previously downloaded unencrypted backups, CSV files, printouts, other browser profiles, and storage remnants are not erased or encrypted by this upgrade. The app stays unlocked until you press Lock or reload/close it; there is no inactivity timeout. The backup password and app password may differ. Encryption does not replace off-device backups.
 - When upgrading from v1.3, retain the same GitHub Pages URL and browser. Export a backup **before** updating, then enable encryption only after confirming that your existing records are present.
+
+## Equipment tracking (November 2026)
+- Open **Equipment** to create customer-linked equipment records with equipment type, manufacturer, model, serial number, refrigerant, installation date, warranty expiration and notes/location.
+- Select an existing unit when recording a **New Service Call**, or editing a service record. The equipment list is filtered to the selected customer. Equipment fields are optional, and the original free-text equipment description is retained for legacy calls.
+- Open an equipment record to view its linked service / repair history; older service calls remain untouched and may be linked later by editing them.
+- The **Equipment CSV** export includes the equipment register. Complete JSON and encrypted backups include equipment automatically. Older backups without an equipment array import as an empty register without removing existing customers, services, or invoices.
+- Equipment records with linked services cannot be deleted; customers with equipment cannot be deleted. Before deploying any update, make an encrypted backup and verify it.
+- Validation performed: JavaScript syntax and unit-selection/customer filtering smoke checks. Full physical mobile, app-lock migration, encrypted restore and real-device storage tests have **not** been completed.
