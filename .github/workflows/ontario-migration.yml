@@ -1,0 +1,17 @@
+name: Ontario migration verification
+on:
+  push:
+    branches: [test/ontario-migration-verification]
+  pull_request:
+    branches: [main]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/ontario-migration.test.cjs

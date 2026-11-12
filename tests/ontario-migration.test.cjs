@@ -1,0 +1,13 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),test=require('node:test');
+const html=fs.readFileSync('index.html','utf8');
+const js=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+test('single file JavaScript compiles',()=>{assert.ok(js);new vm.Script(js)});
+const migration=js.match(/function migrateOntario\(\)\{[\s\S]*?\}\nfunction businessProfiles\(/)?.[0].replace(/\nfunction businessProfiles\($/,'');
+assert.ok(migration,'Migration function must exist');
+const legacy=()=>({settings:{business:'Original HVAC',phone:'123',email:'test@example.com',address:'Ontario',tax:5},customers:[{id:'c1',name:'Customer'}],equipment:[{id:'e1',customerId:'c1'}],services:[{id:'s1',customerId:'c1',equipmentId:'e1'}],invoices:[{id:'i1',number:'INV-001',subtotal:100,total:105,paid:true,paidDate:'2026-01-01'}],nextInvoice:2});
+function run(db){let saves=0;const context=vm.createContext({db,save:()=>{saves++}});vm.runInContext(migration+';migrateOntario()',context);return {db,saves,again:()=>vm.runInContext('migrateOntario()',context)}}
+test('migrates HVAC records without changing amounts, IDs or legacy settings',()=>{const original=legacy(),prior=JSON.parse(JSON.stringify(original)),r=run(original);assert.equal(r.db.schemaVersion,2);assert.equal(r.db.businesses.length,2);assert.equal(r.db.businesses[0].id,'hvac');assert.equal(r.db.businesses[1].id,'property');assert.equal(r.db.businesses[0].defaultHstRate,13);assert.equal(r.db.businesses[1].defaultHstRate,13);assert.equal(r.db.invoices[0].total,105);assert.equal(r.db.invoices[0].paid,true);assert.equal(r.db.settings.tax,5);assert.equal(r.db.nextInvoice,2);for(const kind of ['customers','equipment','services','invoices']){assert.equal(r.db[kind].length,prior[kind].length);assert.equal(r.db[kind][0].id,prior[kind][0].id);assert.equal(r.db[kind][0].businessId,'hvac')}assert.equal(r.saves,1)});
+test('migration is idempotent and preserves edited business profiles',()=>{const r=run(legacy());r.db.businesses[1].legalName='Ontario Property Inc.';r.again();assert.equal(r.db.businesses.length,2);assert.equal(r.db.businesses[1].legalName,'Ontario Property Inc.');assert.equal(r.saves,1)});
+test('existing backup and encrypted vault functions remain present',()=>{for(const name of ['encryptBackup','decryptBackup','unlockVault','initializeStorage','importData','backupPayload'])assert.match(js,new RegExp('function '+name+'\\('))});
+test('business profiles screen and navigation are wired',()=>{assert.match(html,/data-tab="businessProfiles"/);assert.match(js,/businessProfiles\}\)\[tab\]/);assert.match(js,/function businessProfiles\(/)});
