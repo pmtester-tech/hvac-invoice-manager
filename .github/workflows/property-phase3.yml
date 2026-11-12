@@ -1,0 +1,17 @@
+name: Property Phase 3 tests
+on:
+  push:
+    branches: [feature/property-management-phase3]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/property-phase3.test.cjs
